@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <!-- Estas lineas son para que funcione en GitHub -->
+    <link rel="stylesheet" href="https://librekcesar.github.io/busca_zipcodes4/leaflet-search-master/leaflet-search-master/src/leaflet-search.css" />
+    <script src="https://librekcesar.github.io/busca_zipcodes4/leaflet-search-master/leaflet-search-master/src/leaflet-search.js"></script>
+    <style>
+        #map {
+            width: 100%;
+            height: 900px;
+        }
+
+         #map-title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            /* Asegúrate de que este background-color sea válido, rgba(r,g,b,a) */
+            background-color: rgba(255, 255, 255, 0.8); /* Ejemplo de blanco semitransparente */
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 25px;
+            z-index: 1000;
+        }
+
+        .leaflet-control-search {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+        
+#map-legend {
+        position: absolute;
+        bottom: 20px;
+        right: 1200px;
+        background: white;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5em;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+    }
+     /* Estilo para las líneas en la leyenda, ahora son rectángulos para líneas */
+        .legend-line-swatch {
+            width: 30px; /* Ancho para representar una línea */
+            height: 4px; /* Grosor de la línea */
+            display: inline-block;
+            margin-right: 5px;
+            vertical-align: middle;
+            border: 1px solid #333; /* Un pequeño borde para que se vea si el color es claro */
+        }
+
+         /* Estilo para los iconos de cuadrados personalizados */
+    .custom-square-icon {
+        /* Asegura que el divIcon sea un contenedor flexible */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+     /* Estilo para el triángulo como ícono */
+   
+    /* Para que apunte hacia arriba: */
+     .triangle-marker {
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 20px solid #dfdf11;
+    } 
+    </style>
+</head>
+<body>
+    <div id="map-title"> Coberura 99 minutos</div>
+    <div id="map"></div>
+    <div id="map-legend" class="legend">
+       
+        <h4>Tipo de cobertura</h4>
+        <div><span style="background-color: #024b08; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Extendida/Foránea/Local</div>
+        <div><span style="background-color: #03810e; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Extendida/Local </div>
+        <div><span style="background-color: #05be14; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Foránea/Local </div>
+        <div><span style="background-color: #08f41c; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Extendida </div>
+        <div><span style="background-color: #a3ee2b; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Local </div>
+        <div><span style="background-color: #727270; width: 20px; height: 20px; display: inline-block; border-radius: 50%;"></span> Sin cobertura </div>
+    </div>
+
+    <!-- Descomentar este bloque de código en el github -->
+    <script src="https://unpkg.com/leaflet@1.3.0/dist/leaflet.js"></script>
+    <script src="https://librekcesar.github.io/busca_zipcodes4/leaflet-search-master/leaflet-search-master/src/leaflet-search.js"></script>
+    
+    <script src="estados_mex_simpl_b_copia.js"></script>
+
+
+    <script>
+    // Suponiendo que 'centroidemx4.js' define una variable 'cenmx4' con el GeoJSON de la primera capa de puntos
+    
+    
+   
+
+
+    var poligono1 = mex;
+   
+     //
+    
+    //
+        function getColor(TIPO_COBERTURA) {
+            switch (TIPO_COBERTURA) {
+                case 'Extendida': return '#08f41c';
+                case 'Extendida/Foranea/Local': return '#024b08';
+                case 'Extendida/Local': return '#03810e';
+                case 'Foranea/Local': return '#05be14';
+                case 'Local': return '#a3ee2b';
+                default: return '#727270';
+            }
+        }
+
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.TIPO_COBERTURA),
+                weight: 1,
+                opacity: 9,
+                color: 'black',
+                dashArray: '2',
+                fillOpacity: 0.7
+            };
+        }
+
+        function onEachFeature(feature, layer) {
+            if (feature.properties) {
+                layer.bindPopup('<p> Estado: ' + feature.properties.NOM_ENT + '</p><p>Otro: ' + feature.properties.NOMGEO + '</p><p>Tipo de cobertura: ' + feature.properties.TIPO_COBERTURA  + '</p><p>Clave de entidad: ' + feature.properties.CVE_ENT + '</p>');
+            }
+        }
+
+        var layerGroup = L.geoJSON(mex, {
+            style: style,
+            onEachFeature: onEachFeature
+        });
+
+
+    //
+    
+
+    // Crear el mapa centrado en una ubicación específica
+    var map = new L.Map('map', {zoom: 6, center: new L.latLng([19.46695, -99.13366]) });
+
+    // Añadir capa de tiles al mapa
+    map.addLayer(new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'));
+
+    map.addLayer(layerGroup);
+
+
+
+
+  
+
+
+    ////fin de segunda capa de puntos
+
+
+    ////Tercera capa de puntos: 
+  
+
+
+    
+    
+
+    // Función para crear capas de líneas
+   
+
+    // Crear las capas de líneas
+  
+   
+    
+
+    //////
+
+
+    ////
+   
+
+    
+    
+
+    // Añadir control de capas
+    var overlays = {
+        "Tipo de cobertura por Entidad": layerGroup
+        
+       
+    };
+
+    L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+    </script>
+</body>
+</html>
